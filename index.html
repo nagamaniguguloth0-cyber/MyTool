@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MultiTool - QR, Quotes & Knowledge</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #020617;
+            color: #f8fafc;
+        }
+
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.4s ease-out;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .glass {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .wiki-card:hover {
+            border-color: #3b82f6;
+            transform: translateY(-2px);
+        }
+
+        #qrcode img {
+            margin: 0 auto;
+            border: 8px solid white;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+    <!-- Header -->
+    <header class="border-b border-slate-800 bg-slate-900/50 sticky top-0 z-50 backdrop-blur-md">
+        <div class="max-w-6xl mx-auto px-4 py-4 flex flex-col md:flex-row items-center justify-between gap-4">
+            <div class="flex items-center gap-2">
+                <div class="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
+                    <i data-lucide="layers" class="text-white"></i>
+                </div>
+                <h1 class="text-xl font-bold tracking-tight">MultiTool<span class="text-blue-500">.</span></h1>
+            </div>
+            
+            <nav class="flex bg-slate-800 p-1 rounded-xl">
+                <button onclick="switchTab('qr')" class="tab-btn px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 bg-blue-600 text-white" id="tab-qr">
+                    <div class="flex items-center gap-2">
+                        <i data-lucide="qr-code" class="w-4 h-4"></i>
+                        QR Generator
+                    </div>
+                </button>
+                <button onclick="switchTab('quotes')" class="tab-btn px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 text-slate-400 hover:text-white" id="tab-quotes">
+                    <div class="flex items-center gap-2">
+                        <i data-lucide="quote" class="w-4 h-4"></i>
+                        Quotes
+                    </div>
+                </button>
+                <button onclick="switchTab('learn')" class="tab-btn px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 text-slate-400 hover:text-white" id="tab-learn">
+                    <div class="flex items-center gap-2">
+                        <i data-lucide="book-open" class="w-4 h-4"></i>
+                        Learn
+                    </div>
+                </button>
+            </nav>
+        </div>
+    </header>
+
+    <main class="flex-grow max-w-4xl mx-auto w-full px-4 py-12">
+        
+        <!-- SECTION 1: QR GENERATOR -->
+        <section id="qr-content" class="tab-content active">
+            <div class="text-center mb-10">
+                <h2 class="text-3xl font-bold mb-2">QR Code Generator</h2>
+                <p class="text-slate-400">Convert your links or text into a scanable QR code instantly.</p>
+            </div>
+            
+            <div class="glass p-8 rounded-2xl shadow-2xl">
+                <div class="mb-6">
+                    <label class="block text-sm font-medium text-slate-400 mb-2">Text or URL</label>
+                    <input type="text" id="qr-input" placeholder="https://example.com" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all">
+                </div>
+                
+                <div class="flex flex-wrap gap-4 mb-8">
+                    <button onclick="generateQR()" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-xl transition-all flex items-center justify-center gap-2">
+                        <i data-lucide="zap" class="w-5 h-5"></i> Generate
+                    </button>
+                    <button onclick="clearQR()" class="bg-slate-700 hover:bg-slate-600 text-white font-semibold py-3 px-6 rounded-xl transition-all flex items-center justify-center gap-2">
+                        <i data-lucide="trash-2" class="w-5 h-5"></i> Clear
+                    </button>
+                </div>
+
+                <div id="qr-display-container" class="hidden">
+                    <div class="flex flex-col items-center">
+                        <div id="qrcode" class="p-4 bg-white rounded-lg shadow-inner mb-6"></div>
+                        <button onclick="downloadQR()" class="flex items-center gap-2 text-blue-400 hover:text-blue-300 font-medium transition-colors">
+                            <i data-lucide="download" class="w-5 h-5"></i> Download Image
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 2: SAD QUOTES -->
+        <section id="quotes-content" class="tab-content">
+            <div class="text-center mb-10">
+                <h2 class="text-3xl font-bold mb-2">Reflections</h2>
+                <p class="text-slate-400">Words that echo the complexity of life and emotion.</p>
+            </div>
+
+            <div class="glass p-10 rounded-2xl shadow-2xl min-h-[300px] flex flex-col justify-center items-center text-center relative overflow-hidden">
+                <div class="absolute top-4 left-4 opacity-10">
+                    <i data-lucide="quote" class="w-24 h-24"></i>
+                </div>
+                
+                <p id="quote-text" class="text-xl md:text-2xl font-medium mb-6 italic leading-relaxed">"The hardest thing to do is watch the one you love, love someone else."</p>
+                <p id="quote-author" class="text-slate-500 font-medium mb-8">— Unknown</p>
+                
+                <div class="flex flex-wrap justify-center gap-4">
+                    <button onclick="getNewQuote()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-xl transition-all flex items-center gap-2">
+                        <i data-lucide="refresh-cw" class="w-5 h-5"></i> New Quote
+                    </button>
+                    <div class="flex gap-2">
+                        <button onclick="copyQuote()" class="p-3 bg-slate-700 hover:bg-slate-600 rounded-xl transition-all text-white" title="Copy to clipboard">
+                            <i data-lucide="copy" class="w-5 h-5"></i>
+                        </button>
+                        <button onclick="shareWhatsApp()" class="p-3 bg-emerald-600 hover:bg-emerald-700 rounded-xl transition-all text-white" title="Share on WhatsApp">
+                            <i data-lucide="message-circle" class="w-5 h-5"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 3: LEARN (WIKIPEDIA STYLE) -->
+        <section id="learn-content" class="tab-content">
+            <div id="learn-list">
+                <div class="text-center mb-10">
+                    <h2 class="text-3xl font-bold mb-2">Knowledge Hub</h2>
+                    <p class="text-slate-400">Deep dives into topics that matter.</p>
+                </div>
+
+                <div class="grid md:grid-cols-3 gap-6">
+                    <!-- Motivation -->
+                    <div onclick="showArticle('motivation')" class="wiki-card glass p-6 rounded-2xl cursor-pointer transition-all border border-transparent group">
+                        <div class="w-12 h-12 bg-amber-500/20 text-amber-500 rounded-lg flex items-center justify-center mb-4 group-hover:bg-amber-500 group-hover:text-white transition-all">
+                            <i data-lucide="flame"></i>
+                        </div>
+                        <h3 class="text-xl font-bold mb-2">Motivation</h3>
+                        <p class="text-slate-400 text-sm">Understanding the drive behind human behavior and achievement.</p>
+                        <div class="mt-4 flex items-center text-blue-400 text-sm font-medium">
+                            Read article <i data-lucide="chevron-right" class="w-4 h-4 ml-1"></i>
+                        </div>
+                    </div>
+
+                    <!-- Life -->
+                    <div onclick="showArticle('life')" class="wiki-card glass p-6 rounded-2xl cursor-pointer transition-all border border-transparent group">
+                        <div class="w-12 h-12 bg-emerald-500/20 text-emerald-500 rounded-lg flex items-center justify-center mb-4 group-hover:bg-emerald-500 group-hover:text-white transition-all">
+                            <i data-lucide="leaf"></i>
+                        </div>
+                        <h3 class="text-xl font-bold mb-2">Life</h3>
+                        <p class="text-slate-400 text-sm">Navigating the complexities of existence and finding balance.</p>
+                        <div class="mt-4 flex items-center text-blue-400 text-sm font-medium">
+                            Read article <i data-lucide="chevron-right" class="w-4 h-4 ml-1"></i>
+                        </div>
+                    </div>
+
+                    <!-- Study Tips -->
+                    <div onclick="showArticle('study')" class="wiki-card glass p-6 rounded-2xl cursor-pointer transition-all border border-transparent group">
+                        <div class="w-12 h-12 bg-purple-500/20 text-purple-500 rounded-lg flex items-center justify-center mb-4 group-hover:bg-purple-500 group-hover:text-white transition-all">
+                            <i data-lucide="graduation-cap"></i>
+                        </div>
+                        <h3 class="text-xl font-bold mb-2">Study Tips</h3>
+                        <p class="text-slate-400 text-sm">Techniques to enhance learning and academic performance.</p>
+                        <div class="mt-4 flex items-center text-blue-400 text-sm font-medium">
+                            Read article <i data-lucide="chevron-right" class="w-4 h-4 ml-1"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Article View Container -->
+            <div id="article-view" class="hidden">
+                <button onclick="backToLearn()" class="flex items-center gap-2 text-slate-400 hover:text-white mb-8 transition-colors">
+                    <i data-lucide="arrow-left" class="w-4 h-4"></i> Back to Hub
+                </button>
+                <div id="article-content" class="prose prose-invert max-w-none">
+                    <!-- Content will be injected here -->
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="border-t border-slate-800 bg-slate-900/30 py-8 text-center text-slate-500 text-sm mt-12">
+        <p>&copy; 2024 MultiTool Web. Built for emotional growth and utility.</p>
+        <div class="mt-2 flex justify-center gap-4">
+            <a href="#" class="hover:text-slate-300">Privacy</a>
+            <a href="#" class="hover:text-slate-300">Terms</a>
+            <a href="#" class="hover:text-slate-300">Contact</a>
+        </div>
+    </footer>
+
+    <script>
+        // --- Navigation ---
+        function switchTab(tabId) {
+            // Hide all contents
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            // Show selected content
+            document.getElementById(tabId + '-content').classList.add('active');
+
+            // Update tab styles
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('bg-blue-600', 'text-white');
+                btn.classList.add('text-slate-400');
+            });
+            document.getElementById('tab-' + tabId).classList.add('bg-blue-600', 'text-white');
+            document.getElementById('tab-' + tabId).classList.remove('text-slate-400');
+
+            // Reset article view if switching back to Learn
+            if (tabId === 'learn') backToLearn();
+            
+            lucide.createIcons();
+        }
+
+        // --- QR Generator ---
+        let qrCodeInstance = null;
+
+        function generateQR() {
+            const text = document.getElementById('qr-input').value;
+            if (!text) {
+                alert("Please enter some text or a URL");
+                return;
+            }
+
+            const container = document.getElementById('qrcode');
+            container.innerHTML = ""; // Clear existing
+            
+            qrCodeInstance = new QRCode(container, {
+                text: text,
+                width: 256,
+                height: 256,
+                colorDark : "#000000",
+                colorLight : "#ffffff",
+                correctLevel : QRCode.CorrectLevel.H
+            });
+
+            document.getElementById('qr-display-container').classList.remove('hidden');
+            setTimeout(() => lucide.createIcons(), 100);
+        }
+
+        function clearQR() {
+            document.getElementById('qr-input').value = "";
+            document.getElementById('qrcode').innerHTML = "";
+            document.getElementById('qr-display-container').classList.add('hidden');
+        }
+
+        function downloadQR() {
+            const img = document.querySelector('#qrcode img');
+            if (!img) return;
+            
+            const link = document.createElement('a');
+            link.download = 'qrcode.png';
+            link.href = img.src;
+            link.click();
+        }
+
+        // --- Sad Life Quotes ---
+        const quotes = [
+            { text: "The hardest thing to do is watch the one you love, love someone else.", author: "Unknown" },
+            { text: "The person who tries to keep everyone happy often ends up feeling the loneliest.", author: "Unknown" },
+            { text: "It’s hard to forget someone who gave you so much to remember.", author: "Unknown" },
+            { text: "Heavy hearts, like heavy clouds in the sky, are best relieved by the letting of a little water.", author: "Christopher Morley" },
+            { text: "Sometimes, the only way the good Lord can get into some hearts is to break them.", author: "Fulton J. Sheen" },
+            { text: "Tears come from the heart and not from the brain.", author: "Leonardo da Vinci" },
+            { text: "Death is not the greatest loss in life. The greatest loss is what dies inside us while we live.", author: "Norman Cousins" },
+            { text: "It is better to have loved and lost than never to have lost at all.", author: "Samuel Butler" },
+            { text: "We are all lonely, but if we're lonely together, maybe we can be lonely in a different way.", author: "Unknown" },
+            { text: "The saddest kind of sad is when your tears can't even fall and you feel nothing. It's like the world has ended.", author: "Unknown" }
+        ];
+
+        function getNewQuote() {
+            const randomIndex = Math.floor(Math.random() * quotes.length);
+            const quote = quotes[randomIndex];
+            
+            const textEl = document.getElementById('quote-text');
+            const authorEl = document.getElementById('quote-author');
+            
+            // Simple fade out/in effect
+            textEl.style.opacity = 0;
+            authorEl.style.opacity = 0;
+            
+            setTimeout(() => {
+                textEl.innerText = `"${quote.text}"`;
+                authorEl.innerText = `— ${quote.author}`;
+                textEl.style.opacity = 1;
+                authorEl.style.opacity = 1;
+            }, 300);
+        }
+
+        function copyQuote() {
+            const text = document.getElementById('quote-text').innerText;
+            const author = document.getElementById('quote-author').innerText;
+            navigator.clipboard.writeText(`${text} ${author}`);
+            alert("Quote copied to clipboard!");
+        }
+
+        function shareWhatsApp() {
+            const text = document.getElementById('quote-text').innerText;
+            const author = document.getElementById('quote-author').innerText;
+            const message = encodeURIComponent(`${text} ${author}`);
+            window.open(`https://wa.me/?text=${message}`, '_blank');
+        }
+
+        // --- Wikipedia Style Info Pages ---
+        const articles = {
+            motivation: {
+                title: "Understanding Motivation",
+                content: `
+                    <h1 class="text-4xl font-bold mb-6 text-white">Motivation: The Science of Drive</h1>
+                    <p class="text-slate-300 mb-6 text-lg leading-relaxed">Motivation is the process that initiates, guides, and maintains goal-oriented behaviors. It is what causes you to act, whether it is getting a glass of water to reduce thirst or reading a book to gain knowledge.</p>
+                    
+                    <h2 class="text-2xl font-bold mt-8 mb-4 text-white">Types of Motivation</h2>
+                    <p class="text-slate-300 mb-4">Different types of motivation are frequently described as being either extrinsic or intrinsic:</p>
+                    <ul class="list-disc ml-6 mb-6 text-slate-300 space-y-2">
+                        <li><strong>Extrinsic motivations</strong> are those that arise from outside of the individual and often involve rewards such as trophies, money, social recognition, or praise.</li>
+                        <li><strong>Intrinsic motivations</strong> are those that arise from within the individual, such as doing a complicated crossword puzzle purely for the personal gratification of solving a problem.</li>
+                    </ul>
+
+                    <h2 class="text-2xl font-bold mt-8 mb-4 text-white">The Psychology Behind It</h2>
+                    <p class="text-slate-300 mb-4">There are several theories of motivation. One of the most famous is Maslow's Hierarchy of Needs. This theory suggests that people are motivated to fulfill basic needs before moving on to other, more advanced needs.</p>
+                    <p class="text-slate-300 mb-4">Another major theory is Expectancy Theory, which suggests that our motivation is influenced by how much we want a reward, the likelihood that the effort will lead to expected performance, and the belief that the performance will lead to the reward.</p>
+                `
+            },
+            life: {
+                title: "The Journey of Life",
+                content: `
+                    <h1 class="text-4xl font-bold mb-6 text-white">The Philosophy of Life</h1>
+                    <p class="text-slate-300 mb-6 text-lg leading-relaxed">Life is a characteristic that distinguishes physical entities that have biological processes, such as signaling and self-sustaining processes, from those that do not, either because such functions have ceased, or because they never had such functions and are classified as inanimate.</p>
+                    
+                    <h2 class="text-2xl font-bold mt-8 mb-4 text-white">Existential Perspectives</h2>
+                    <p class="text-slate-300 mb-4">For centuries, philosophers have pondered the meaning of life. Some believe life has an inherent purpose, while others argue that purpose is something individuals must create for themselves. This latter view is central to existentialism.</p>
